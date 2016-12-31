@@ -26,7 +26,7 @@ script:
 - curl --upload-file "./log" "https://transfer.sh/log"
 - cd out/target/product/on7elte/
 - md5sum recovery.img > md5
-- mv recovery.img "$(date +%Y%m%d)-$(cat md5)"
+- cp recovery.img "$(date +%Y%m%d)-$(cat md5)"
 - curl --upload-file "./$(date +%Y%m%d)-$(cat md5)" "https://transfer.sh/$(date +%Y%m%d)-$(cat
   md5)"
 - tar -H ustar -c "$(date +%Y%m%d)-$(cat md5)" > "$(date +%Y%m%d)-$(cat md5).tar"
@@ -34,12 +34,12 @@ script:
 - curl --upload-file "./$(date +%Y%m%d)-$(cat md5).tar" "https://transfer.sh/$(date
   +%Y%m%d)-$(cat md5).tar"
 - echo "####Made Zip#####"
-- curl --upload-file "./twrp-$(date +%Y%m%d)-3.0.2-UNOFFICIAL-on7elte.zip" "https://transfer.sh/twrp-$(date
-  +%Y%m%d)-3.0.2-UNOFFICIAL-on7elte.zip"
+- curl --upload-file "./twrp-$(date +%Y%m%d)-3.0.3-UNOFFICIAL-on7elte.zip" "https://transfer.sh/twrp-$(date
+  +%Y%m%d)-3.0.3-UNOFFICIAL-on7elte.zip"
 deploy:
   provider: releases
   api_key:
     secure: P2wE7IH7Ecd1ZFpT/I5U9ztuSxz30W4+ksYZsUej+ViVLtMZ8QUa+PCcLiRGhwf2GgHTccLp/XoGxMriVordmKUoxYsJYU1XfK2bpPEAESWTYQsd0/9FfVn7KuOjPqRoABdZ7/4Ox9phVHMPvWJdokOhPgFNJFYOfIZ3bA9KTuUpa4WPp0KZzgqZmT5j5VLxUFxBf+4AV3ONGUENhqprmq5VUyCoeeP3s3m7NdLOPfuhwF1d4B/JBQ85NX6zLfLxq/ABuTs5Gh7p21HOp40oDyKAi9QltCWn+hfncfLg/dt2uUWp2z7IRbPTzJupKUhEc/YKQZB0c4gYAxnFfuFlew5jlJ1jHPtBIPTvIVp3svprCEUhbfI2mNYPmXwKXf89Lapo2DeBUcLMnpjI+wmPqJoPA/mS0TATknK0/UntLI/9JIuKKU0J/jgkL/4pgwwvj/qzO7qV6GPAGgqz5DVvPQnhjm6naICaIdjUxY3iBNKztgQJxp+CK7PXyGq+gcZkCg8nkPvwGlxxhUfC3d67LIUcJi5VNJLvppaK4UbvGCkGCJ9SvVEr8ECDJfzJe3qOlzV2Qv5jEp4un1s9d+xE3sq3W7LxUBM8Ry9kQGRO35hrSXAlaQw80zlme71ksyrZOPTRVQpAX1HOZ050U164o4sQ7x/F2YSV+QPYlg5mgqk=
-  file: ''
+  file: '$HOME/twrp/out/target/product/on7elte/recovery.img'
   on:
     repo: TwrpBuilder/android_device_samsung_on7elte
