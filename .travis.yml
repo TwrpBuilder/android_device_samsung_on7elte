@@ -1,45 +1,34 @@
-language: java
-jdk:
-- openjdk7
 sudo: required
+services:
+  - docker
+before_install:
+  - docker pull yshalsager/cyanogenmod:latest
 before_script:
-- cd $HOME
-- sudo apt-get install -y lzop git-core gnupg flex bison gperf build-essential zip
-  curl zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 lib32ncurses5-dev x11proto-core-dev
-  libx11-dev lib32z-dev ccache libgl1-mesa-dev libxml2-utils xsltproc unzip maven
-  schedtool &> /dev/null
-- git clone https://sumitrajdev@bitbucket.org/sumitrajdev/twrp-5.1.1.git $HOME/tmp
-- mv $HOME/tmp/twrp-5.1.1.tar.xz $HOME/twrp.tar.xz
-- rm -rf tmp
-- tar -xvf twrp.tar.xz &> log
+- cd $HOME && mkdir twrp
+- wget -q https://github.com/TwrpBuilder/twrp-sources/releases/download/omni_twrp-5.1.1-20180211/omni_twrp-5.1.1-20180211-norepo.tar.xz
+  -O $HOME/twrp.tar.xz
+- tar -xJf twrp.tar.xz --directory $HOME/twrp/ && rm twrp.tar.xz
 script:
-- cd $HOME/twrp
-- git clone https://github.com/TwrpBuilder/android_device_samsung_on7elte.git device/samsung/on7elte
-  &> /dev/null
-- rm -rf bootable/recovery
-- git clone https://github.com/omnirom/android_bootable_recovery.git bootable/recovery
-  &> /dev/null
-- source build/envsetup.sh ; lunch omni_on7elte-eng
-- make -j4 bootimage
-- make -j4 recoveryimage &> log
-- mkazip_on7elte
-- curl --upload-file "./log" "https://transfer.sh/log"
-- cd out/target/product/on7elte/
-- md5sum recovery.img > md5
-- cp recovery.img "$(date +%Y%m%d)-$(cat md5)"
-- curl --upload-file "./$(date +%Y%m%d)-$(cat md5)" "https://transfer.sh/$(date +%Y%m%d)-$(cat
-  md5)"
-- tar -H ustar -c "$(date +%Y%m%d)-$(cat md5)" > "$(date +%Y%m%d)-$(cat md5).tar"
-- echo "Made Tar"
-- curl --upload-file "./$(date +%Y%m%d)-$(cat md5).tar" "https://transfer.sh/$(date
-  +%Y%m%d)-$(cat md5).tar"
-- echo "####Made Zip#####"
-- curl --upload-file "./twrp-$(date +%Y%m%d)-3.0.3-UNOFFICIAL-on7elte.zip" "https://transfer.sh/twrp-$(date
-  +%Y%m%d)-3.0.3-UNOFFICIAL-on7elte.zip"
+  - cd $HOME/twrp/ && git clone https://github.com/TwrpBuilder/android_device_samsung_on7elte.git device/samsung/on7elte
+  - git clone https://github.com/TwrpBuilder/device_generic_twrpbuilder.git device/generic/twrpbuilder
+  - rm -rf bootable/recovery && git clone https://github.com/omnirom/android_bootable_recovery.git bootable/recovery
+  - |
+    docker run --rm -i -e USER_ID=$(id -u) -e GROUP_ID=$(id -g) -v "$(pwd):/home/cmbuild/twrp/:rw,z" yshalsager/cyanogenmod bash << EOF
+    cd /home/cmbuild/twrp/
+    source build/envsetup.sh && lunch omni_on7elte-eng && make -j16 recoveryimage
+    exit
+    EOF
+after_success:
+  - export version=$(cat bootable/recovery/variables.h | grep "define TW_MAIN_VERSION_STR" | cut -d '"' -f2)
+  - cp $HOME/twrp/out/target/product/on7elte/recovery.img $HOME/twrp/TWRP-$version-on7prolte-$(date +"%Y%m%d").img
+
 deploy:
+  skip_cleanup: true
   provider: releases
-  api_key:
-    secure: P2wE7IH7Ecd1ZFpT/I5U9ztuSxz30W4+ksYZsUej+ViVLtMZ8QUa+PCcLiRGhwf2GgHTccLp/XoGxMriVordmKUoxYsJYU1XfK2bpPEAESWTYQsd0/9FfVn7KuOjPqRoABdZ7/4Ox9phVHMPvWJdokOhPgFNJFYOfIZ3bA9KTuUpa4WPp0KZzgqZmT5j5VLxUFxBf+4AV3ONGUENhqprmq5VUyCoeeP3s3m7NdLOPfuhwF1d4B/JBQ85NX6zLfLxq/ABuTs5Gh7p21HOp40oDyKAi9QltCWn+hfncfLg/dt2uUWp2z7IRbPTzJupKUhEc/YKQZB0c4gYAxnFfuFlew5jlJ1jHPtBIPTvIVp3svprCEUhbfI2mNYPmXwKXf89Lapo2DeBUcLMnpjI+wmPqJoPA/mS0TATknK0/UntLI/9JIuKKU0J/jgkL/4pgwwvj/qzO7qV6GPAGgqz5DVvPQnhjm6naICaIdjUxY3iBNKztgQJxp+CK7PXyGq+gcZkCg8nkPvwGlxxhUfC3d67LIUcJi5VNJLvppaK4UbvGCkGCJ9SvVEr8ECDJfzJe3qOlzV2Qv5jEp4un1s9d+xE3sq3W7LxUBM8Ry9kQGRO35hrSXAlaQw80zlme71ksyrZOPTRVQpAX1HOZ050U164o4sQ7x/F2YSV+QPYlg5mgqk=
-  file: '$HOME/twrp/out/target/product/on7elte/recovery.img'
+  api_key: "$GIT_OAUTH_TOKEN_TB"
+  file_glob: true
+  file: $HOME/twrp/*.img
   on:
+    tags: false
     repo: TwrpBuilder/android_device_samsung_on7elte
+    branch: android-5.1
