@@ -14,5 +14,6 @@ PRODUCT_PACKAGES += \
 ## Device identifier. This must come after all inclusions
 PRODUCT_DEVICE := on7elte
 PRODUCT_NAME := omni_on7elte
+PRODUCT_MODEL := SM-G600F
 PRODUCT_BRAND := samsung
 PRODUCT_MANUFACTURER := samsung
